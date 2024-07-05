@@ -5,7 +5,8 @@ let timerState = {
   currentState: 'Not Started',
   timeLeft: WORK_DURATION,
   breakTimeLeft: BREAK_DURATION,
-  intervalId: null
+  intervalId: null,
+  endSessionQuote: null
 };
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -18,8 +19,20 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         break;
   
       case 'endWorkSession':
-        endSession();
-        sendResponse({ status: 'Session ended' });
+        fetchRandomQuote().then(quote => {
+          timerState.endSessionQuote = quote;
+          chrome.storage.sync.set({ timerState }); // Save the quote in storage
+          sendResponse({ status: 'Please type the following quote to end the session', quote });
+        });
+        break;
+  
+      case 'validateQuote':
+        if (request.quote === timerState.endSessionQuote) {
+          endSession();
+          sendResponse({ status: 'Session ended. Good work, mate.' });
+        } else {
+          sendResponse({ status: 'There was an error -- is there a session ongoing?' });
+        }
         break;
   
       case 'claimBreak':
@@ -47,6 +60,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     }
   });
   
+  
 
 chrome.tabs.onActivated.addListener(checkActiveTab);
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -56,15 +70,15 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 function startWorkSession() {
-    if (timerState.intervalId) {
-        clearInterval(timerState.intervalId);
-    }; // Prevent multiple intervals
-    timerState.currentState = 'Focus';
-    timerState.timeLeft = WORK_DURATION; // Reset work session time
-    updateTimer();
-    console.log(`Work session started for ${WORK_DURATION / 60} minutes.`);
-    timerState.intervalId = setInterval(updateTime, 1000); // Update timer every second
+  if (timerState.intervalId) {
+    clearInterval(timerState.intervalId);
   }
+  timerState.currentState = 'Focus';
+  timerState.timeLeft = WORK_DURATION; // Reset work session time
+  updateTimer();
+  console.log(`Work session started for ${WORK_DURATION / 60} minutes.`);
+  timerState.intervalId = setInterval(updateTime, 1000); // Update timer every second
+}
 
 function endSession() {
   clearInterval(timerState.intervalId);
@@ -72,6 +86,7 @@ function endSession() {
   timerState.currentState = 'Not Started';
   timerState.timeLeft = WORK_DURATION;
   timerState.breakTimeLeft = BREAK_DURATION;
+  timerState.endSessionQuote = null;
   updateTimer();
   console.log("Session ended.");
 }
@@ -126,43 +141,47 @@ function checkActiveTab() {
   });
 }
 
-
-  
-  function notifyContentScripts(tabId = null) {
-    const currentTimerState = timerState;
-    chrome.storage.sync.get('distractionDomains', function (data) {
-      const domains = data.distractionDomains;
-      domains.forEach(domain => {
-        chrome.tabs.query({ url: `*://${domain}/*` }, function(tabs) {
-          tabs.forEach(tab => {
-            if (!tabId || tab.id === tabId) {
-              chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                files: ['scripts/content.js']
-              }, () => {
-                console.log('Content script injected:', tab.id);
-                chrome.tabs.sendMessage(tab.id, { action: 'updateOverlay', timerState: currentTimerState });
-              });
-            }
-          });
-        });
-      });
-  
-      if (tabId) {
-        chrome.tabs.get(tabId, function(tab) {
-          if (tab && domains.some(domain => tab.url.includes(domain))) {
+function notifyContentScripts(tabId = null) {
+  const currentTimerState = timerState;
+  chrome.storage.sync.get('distractionDomains', function (data) {
+    const domains = data.distractionDomains;
+    domains.forEach(domain => {
+      chrome.tabs.query({ url: `*://${domain}/*` }, function(tabs) {
+        tabs.forEach(tab => {
+          if (!tabId || tab.id === tabId) {
             chrome.scripting.executeScript({
-              target: { tabId: tabId },
+              target: { tabId: tab.id },
               files: ['scripts/content.js']
             }, () => {
-              console.log('Content script injected:', tabId);
-              chrome.tabs.sendMessage(tabId, { action: 'updateOverlay', timerState: currentTimerState });
+              console.log('Content script injected:', tab.id);
+              chrome.tabs.sendMessage(tab.id, { action: 'updateOverlay', timerState: currentTimerState });
             });
           }
         });
-      }
+      });
     });
-  }
+
+    if (tabId) {
+      chrome.tabs.get(tabId, function(tab) {
+        if (tab && domains.some(domain => tab.url.includes(domain))) {
+          chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            files: ['scripts/content.js']
+          }, () => {
+            console.log('Content script injected:', tabId);
+            chrome.tabs.sendMessage(tabId, { action: 'updateOverlay', timerState: currentTimerState });
+          });
+        }
+      });
+    }
+  });
+}
+
+function fetchRandomQuote() {
+  return fetch('https://api.quotable.io/quotes/random?minLength=50&maxLength=100')
+    .then(response => response.json())
+    .then(data => data[0].content);
+}
 
 function notify(message) {
   chrome.runtime.sendMessage({ action: 'notify', message });
@@ -181,7 +200,7 @@ function notifyPopup() {
 }
 
 function init() {
-    updateTimer();
+  updateTimer();
 }
 
 init();

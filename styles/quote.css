@@ -1,0 +1,44 @@
+body {
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: yellow;
+    user-select: none; /* Prevent text selection */
+  }
+  
+  #quote-container {
+    text-align: center;
+    max-width: 90%;
+    width: 800px;
+  }
+  
+  #quote-text {
+    font-size: 2em;
+    margin-bottom: 20px;
+    user-select: none; /* Prevent text selection */
+  }
+  
+  #quote-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 2em;
+    color: rgb(116, 203, 93);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid rgb(116, 203, 93);
+    outline: none;
+    text-align: center;
+  }
+  
+  #quote-input::placeholder {
+    color: transparent;
+  }
+  
+  #quote-input:focus::placeholder {
+    color: transparent;
+  }
+  

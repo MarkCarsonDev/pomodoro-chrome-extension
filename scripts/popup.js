@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (request.action === 'notify') {
         alert(request.message);
       } else if (request.action === 'updatePopupTimer') {
-        console.log("Updating popup timer rec")
+        console.log("Updating popup timer rec");
         updatePopupTimer(request.timerState);
         updateButtons(request.timerState.currentState);
       } else if (request.action === 'updateSitesDropdown') {
@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   
     function updatePopupTimer(timerState) {
-        console.log("Updating popup timer")
-    timerDisplay.textContent = timerState.currentState;
+      console.log("Updating popup timer");
+      timerDisplay.textContent = timerState.currentState;
       if (timerState.currentState === 'Focus') {
         timerDisplay.textContent = `Focus: ${formatTime(timerState.timeLeft)}`;
       } else if (timerState.currentState === 'Break') {
@@ -66,39 +66,30 @@ document.addEventListener('DOMContentLoaded', function () {
   
     function updateButtons(currentState) {
       startButton.textContent = (currentState === 'Not Started' || !currentState) ? 'Start Session' : 'End Session';
-    // startButton.textContent = currentState === "" ? 'Not Started' : currentState;
       claimBreakButton.style.display = currentState === 'Focus' && timerState.timeLeft <= 0 ? 'block' : 'none';
       backToWorkButton.style.display = currentState === 'Break' ? 'block' : 'none';
     }
   
     function formatTime(seconds) {
-        // absolute value in js is 
       const minutes = Math.floor(Math.abs(seconds) / 60);
       const remainingSeconds = Math.abs(seconds) % 60;
       return `${seconds < 0 ? '-' : ''}${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
     }
-
+  
     function handleSessionButton() {
-        // get startbutton text
-        // if startbutton text is start session
-        // start session
-        // else
-        // end session
-
-        const startButtonText = startButton.textContent;
-        console.log("Start button text: ", startButtonText)
-            if (startButtonText === 'Start Session') {
-              chrome.runtime.sendMessage({ action: 'startWorkSession' }, function (response) {
-                console.log("Sending message to start work session")
-                alert(response.status);
-              });
-            } else {
-                // todo replaced with start to debug
-              chrome.runtime.sendMessage({ action: 'endWorkSession' }, function (response) {
-                console.log("Sending message to end work session")
-                alert(response.status);
-              });
-            }
+      const startButtonText = startButton.textContent;
+      console.log("Start button text: ", startButtonText);
+      if (startButtonText === 'Start Session') {
+        chrome.runtime.sendMessage({ action: 'startWorkSession' }, function (response) {
+          console.log("Sending message to start work session");
+          alert(response.status);
+        });
+      } else {
+        chrome.runtime.sendMessage({ action: 'endWorkSession' }, function (response) {
+          console.log("Sending message to end work session");
+          chrome.tabs.create({ url: 'quote.html' });
+        });
+      }
     }
   
     // Initial load of sites and timer state
