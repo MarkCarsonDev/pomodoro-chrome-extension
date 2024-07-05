@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pomodoro Timer</title>
+  <link rel="stylesheet" href="styles/popup.css">
+</head>
+<body>
+  <div id="timer">
+    <h1>Pomodoro Timer</h1>
+    <p id="popup-timer">Not Started</p>
+    <button id="start-timer">Start Session</button>
+    <button id="add-site">This site is a distraction</button>
+    <button id="claim-break" style="display:none;">Claim Break</button>
+    <button id="back-to-work" style="display:none;">Back to Work</button>
+    <div>
+      <label for="sites-dropdown">Distraction Sites:</label>
+      <select id="sites-dropdown" multiple></select>
+    </div>
+  </div>
+  <script src="scripts/popup.js"></script>
+</body>
+</html>

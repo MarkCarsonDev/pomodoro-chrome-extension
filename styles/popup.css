@@ -1,0 +1,22 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    width: 200px;
+  }
+  
+  #timer {
+    padding: 10px;
+  }
+  
+  #time-display {
+    font-size: 2em;
+    margin: 20px 0;
+  }
+  
+  button {
+    margin: 5px;
+    padding: 10px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  
